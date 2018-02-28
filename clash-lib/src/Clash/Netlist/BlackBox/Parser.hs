@@ -97,6 +97,7 @@ pTagE =  O True            <$  pToken "~ERESULT"
      <|> (HdlSyn Other)    <$  pToken "~OTHERSYN"
      <|> (BV True)         <$> (pToken "~TOBV" *> pBrackets pSigD) <*> pBrackets pTagE
      <|> (BV False)        <$> (pToken "~FROMBV" *> pBrackets pSigD) <*> pBrackets pTagE
+     <|> Sel               <$> (pToken "~SEL" *> pBrackets pTagE) <*> pBrackets pNatural
      <|> IsLit             <$> (pToken "~ISLIT" *> pBrackets pNatural)
      <|> IsVar             <$> (pToken "~ISVAR" *> pBrackets pNatural)
      <|> IsGated           <$> (pToken "~ISGATED" *> pBrackets pNatural)

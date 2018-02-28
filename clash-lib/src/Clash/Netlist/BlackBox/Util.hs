@@ -378,6 +378,10 @@ renderTag b (BV False es e) = do
   let ty = lineToType b [e]
   (displayT . renderOneLine) <$> fromBV ty e'
 
+renderTag b (Sel e n) =
+  let ty = lineToType b [e]
+  in  (displayT . renderOneLine) <$> hdlRecSel ty n
+
 renderTag b (Typ Nothing)   = fmap (displayT . renderOneLine) . hdlType Internal . snd $ bbResult b
 renderTag b (Typ (Just n))  = let (_,ty,_) = bbInputs b !! n
                               in  (displayT . renderOneLine) <$> hdlType Internal ty
@@ -525,6 +529,9 @@ prettyElem (BV b es e) = do
     if b
        then text "~TOBV" <> brackets (text es') <> brackets (text e')
        else text "~FROMBV" <> brackets (text es') <> brackets (text e')
+prettyElem (Sel e i) = do
+  e' <- prettyElem e
+  (displayT . renderOneLine) <$> (text "~SEL" <> brackets (text e') <> brackets (int i))
 prettyElem (IsLit i) = (displayT . renderOneLine) <$> (text "~ISLIT" <> brackets (int i))
 prettyElem (IsVar i) = (displayT . renderOneLine) <$> (text "~ISVAR" <> brackets (int i))
 prettyElem (IsGated i) = (displayT . renderOneLine) <$> (text "~ISGATED" <> brackets (int i))
