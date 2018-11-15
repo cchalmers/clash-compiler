@@ -17,7 +17,7 @@
 {-# LANGUAGE TypeFamilies        #-}
 {-# LANGUAGE ViewPatterns        #-}
 
-module Clash.Backend.VHDL (VHDLState) where
+module Clash.Backend.VHDL where
 
 import           Control.Applicative                  (liftA2)
 import           Control.Lens                         hiding (Indexed)
@@ -917,8 +917,12 @@ decls ds = do
 decl :: Int ->  Declaration -> VHDLM (Maybe (Doc,Int))
 decl l (NetDecl' noteM _ id_ ty) = Just <$> (,fromIntegral (TextS.length id_)) <$>
   maybe id addNote noteM ("signal" <+> fill l (pretty id_) <+> colon <+> either pretty vhdlType ty)
+   <> if null attrs then emptyDoc else line <> line <> rattrs
   where
     addNote n = mappend ("--" <+> pretty n <> line)
+
+    rattrs = renderAttrs (fmap (id_,) attrs)
+    attrs  = fromMaybe [] (hwTypeAttrs <$> either (const Nothing) Just ty)
 
 decl _ (InstDecl Comp _ nm _ pms) = fmap (Just . (,0)) $ do
   { rec (p,ls) <- fmap unzip $ sequence [ (,formalLength i) <$> fill (maximum ls) (expr_ False i) <+> colon <+> portDir dir <+> vhdlType ty | (i,dir,ty,_) <- pms ]
