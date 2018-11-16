@@ -927,10 +927,14 @@ decl l (NetDecl' noteM _ id_ ty) = Just <$> (,fromIntegral (TextS.length id_)) <
   where
     addNote n = mappend ("--" <+> pretty n <> line)
 
-decl _ (InstDecl Comp _ nm _ pms) = fmap (Just . (,0)) $ do
+decl _ (InstDecl' Comp _ nm _ gens pms) = fmap (Just . (,0)) $ do
   { rec (p,ls) <- fmap unzip $ sequence [ (,formalLength i) <$> fill (maximum ls) (expr_ False i) <+> colon <+> portDir dir <+> vhdlType ty | (i,dir,ty,_) <- pms ]
+  ; rec (g,lsg) <- fmap unzip $ sequence [ (,formalLength i) <$> fill (maximum lsg) (expr_ False i) <+> colon <+> vhdlType ty | (i,ty,_) <- gens]
   ; "component" <+> pretty nm <> line <>
-      indent 2 ("port" <+> tupledSemi (pure p) <> semi) <> line <>
+    ( if null g then emptyDoc
+        else indent 2 ("generic" <> line <> tupledSemi (pure g) <> semi) <> line
+    )
+    <> indent 2 ("port" <+> tupledSemi (pure p) <> semi) <> line <>
     "end component"
   }
  where
@@ -1047,12 +1051,16 @@ inst_ (CondAssignment id_ _sig scrut scrutTy es) = fmap Just $
     conds ((Nothing,e):_)   = expr_ False e <+> "when" <+> "others" <:> return []
     conds ((Just c ,e):es') = expr_ False e <+> "when" <+> patLit scrutTy c <:> conds es'
 
-inst_ (InstDecl entOrComp libM nm lbl pms) = do
+inst_ (InstDecl' entOrComp libM nm lbl gens pms) = do
     maybe (return ()) (\lib -> Mon (libraries %= (T.fromStrict lib:))) libM
     fmap Just $
       nest 2 $ pretty lbl <+> colon <+> entOrComp'
-                <+> maybe emptyDoc ((<> ".") . pretty) libM <> pretty nm <> line <> pms' <> semi
+                <+> maybe emptyDoc ((<> ".") . pretty) libM <> pretty nm <> line <> gms <> pms' <> semi
   where
+    gms | [] <- gens = emptyDoc
+        | otherwise =  do
+      rec (p,ls) <- fmap unzip $ sequence [ (,formalLength i) <$> fill (maximum ls) (expr_ False i) <+> "=>" <+> expr_ False e | (i,_,e) <- gens]
+      nest 2 ("generic map" <> line <> tupled (pure p)) <> line
     pms' = do
       rec (p,ls) <- fmap unzip $ sequence [ (,formalLength i) <$> fill (maximum ls) (expr_ False i) <+> "=>" <+> expr_ False e | (i,_,_,e) <- pms]
       nest 2 $ "port map" <> line <> tupled (pure p)
