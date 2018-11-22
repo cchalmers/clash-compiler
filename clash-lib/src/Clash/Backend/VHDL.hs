@@ -812,6 +812,7 @@ vhdlType hwty = do
       pretty (TextS.toLower nm) <> "_types." <> tyName t
     go (Void {})       = "std_logic_vector (0 downto 1)"
     go String          = "string"
+    go Integer         = "integer"
     go ty              = error $ $(curLoc) ++ "vhdlType: type is not normalised: " ++ show ty
 
 sigDecl :: VHDLM Doc -> HWType -> VHDLM Doc

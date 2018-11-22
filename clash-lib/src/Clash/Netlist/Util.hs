@@ -378,6 +378,7 @@ typeSize :: HWType
          -> Int
 typeSize (Void {}) = 0
 typeSize String = 1
+typeSize Integer = 1
 typeSize Bool = 1
 typeSize Bit = 1
 typeSize (Clock {}) = 1
