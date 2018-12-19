@@ -51,7 +51,7 @@ import Data.Word         (Word8,Word16,Word32,Word64)
 import GHC.Exts          (Char (C#), Double (D#), Float (F#), Int (I#), Word (W#))
 import GHC.Generics
 import GHC.Show          (appPrec)
-import GHC.Stack         (HasCallStack, callStack, prettyCallStack)
+import GHC.Stack         (HasCallStack, callStack, prettyCallStack, withFrozenCallStack)
 import System.IO.Unsafe  (unsafeDupablePerformIO)
 
 -- | An exception representing an \"uninitialised\" value.
@@ -375,10 +375,10 @@ instance GShowX UWord where
 class Undefined a where
   -- | Create a value where all the elements have an 'errorX', but the spine
   -- is defined.
-  deepErrorX :: String -> a
+  deepErrorX :: HasCallStack => String -> a
 
-  default deepErrorX :: (Generic a, GUndefined (Rep a)) => String -> a
-  deepErrorX = to . gDeepErrorX
+  default deepErrorX :: (HasCallStack, Generic a, GUndefined (Rep a)) => String -> a
+  deepErrorX = withFrozenCallStack $ to . gDeepErrorX
 
 instance Undefined ()
 instance (Undefined a, Undefined b) => Undefined (a,b)
@@ -450,7 +450,7 @@ instance Undefined (Ratio a) where deepErrorX = errorX
 instance Undefined (Complex a) where deepErrorX = errorX
 
 class GUndefined f where
-  gDeepErrorX :: String -> f a
+  gDeepErrorX :: HasCallStack => String -> f a
 
 instance GUndefined V1 where
   gDeepErrorX = errorX
