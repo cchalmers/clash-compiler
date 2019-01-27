@@ -41,6 +41,7 @@ import Foreign.C.Types                (CUShort)
 import GHC.TypeLits                   (KnownNat, Nat, type (+))
 import Numeric.Half                   (Half (..))
 import GHC.Generics
+import GHC.Stack
 import Prelude                        hiding (map)
 
 import Clash.Class.BitPack.Internal   (deriveBitPackTuples)
@@ -73,7 +74,7 @@ class BitPack a where
   --
   -- >>> pack (-5 :: Signed 6)
   -- 11_1011
-  pack   :: a -> BitVector (BitSize a)
+  pack   :: HasCallStack => a -> BitVector (BitSize a)
   default pack
     :: (Generic a, GBitPack (Rep a), GBitSize (Rep a) ~ BitSize a)
     => a -> BitVector (BitSize a)
@@ -87,7 +88,7 @@ class BitPack a where
   -- 59
   -- >>> pack (59 :: Unsigned 6)
   -- 11_1011
-  unpack :: BitVector (BitSize a) -> a
+  unpack :: HasCallStack => BitVector (BitSize a) -> a
   default unpack
     :: (Generic a, GBitPack (Rep a), GBitSize (Rep a) ~ BitSize a)
     => BitVector (BitSize a) -> a
@@ -102,7 +103,7 @@ class BitPack a where
 -- 59
 -- >>> pack (59 :: Unsigned 6)
 -- 11_1011
-bitCoerce :: (BitPack a, BitPack b, BitSize a ~ BitSize b)
+bitCoerce :: (HasCallStack, BitPack a, BitPack b, BitSize a ~ BitSize b)
           => a
           -> b
 bitCoerce = unpack . pack

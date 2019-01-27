@@ -145,7 +145,7 @@ pack# :: Index n -> BitVector (CLog 2 n)
 pack# (I i) = BV 0 i
 
 {-# NOINLINE unpack# #-}
-unpack# :: (KnownNat n, 1 <= n) => BitVector (CLog 2 n) -> Index n
+unpack# :: (HasCallStack, KnownNat n, 1 <= n) => BitVector (CLog 2 n) -> Index n
 unpack# (BV 0 i) = fromInteger_INLINE i
 unpack# bv = undefError "Index.unpack" [bv]
 
