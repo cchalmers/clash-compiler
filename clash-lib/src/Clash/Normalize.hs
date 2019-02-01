@@ -12,6 +12,8 @@
 {-# LANGUAGE TemplateHaskell   #-}
 {-# LANGUAGE ViewPatterns      #-}
 
+{-# OPTIONS_GHC -Wno-unused-imports #-}
+
 module Clash.Normalize where
 
 import           Control.Concurrent.Supply        (Supply)
@@ -393,37 +395,37 @@ clockResetErrors
   -> TyConMap
   -> Type
   -> [String]
-clockResetErrors sp reprs tyTran tcm ty =
-   (Maybe.mapMaybe reportClock clks ++ Maybe.mapMaybe reportResets rsts)
-  where
-    (args,_)  = splitCoreFunForallTy tcm ty
-    (_,args') = partitionEithers args
-    hwArgs    = zip (map (unsafeCoreTypeToHWType' sp $(curLoc) tyTran reprs tcm) args') args'
-    clks      = groupBy ((==) `on` fst) . sortBy (compare `on` fst)
-              $ [ ((nm,i),ty') | (Clock nm i _,ty') <- hwArgs]
-    rsts      = groupBy ((==) `on` (fst.fst)) . sortBy (compare `on` (fst.fst))
-              $ [ (((nm,i),s),ty') | (Reset nm i s,ty') <- hwArgs]
+clockResetErrors _sp _reprs _tyTran _tcm _ty = []
+   -- (Maybe.mapMaybe reportClock clks ++ Maybe.mapMaybe reportResets rsts)
+  -- where
+   --  (args,_)  = splitCoreFunForallTy tcm ty
+   --  (_,args') = partitionEithers args
+   --  hwArgs    = zip (map (unsafeCoreTypeToHWType' sp $(curLoc) tyTran reprs tcm) args') args'
+   --  clks      = groupBy ((==) `on` fst) . sortBy (compare `on` fst)
+   --            $ [ ((nm,i),ty') | (Clock nm i _,ty') <- hwArgs]
+   --  rsts      = groupBy ((==) `on` (fst.fst)) . sortBy (compare `on` (fst.fst))
+   --            $ [ (((nm,i),s),ty') | (Reset nm i s,ty') <- hwArgs]
 
-    reportClock clks'
-      | length clks' >= 2
-      = Just
-      $ concat ["The following clocks:\n"
-               ,concatMap (\c -> "* " ++ showPpr (snd c) ++ "\n") clks'
-               ,"belong to the same clock domain and should be connected to "
-               ,"the same clock source in order to prevent meta-stability "
-               ,"issues."
-               ]
-      | otherwise
-      = Nothing
+   --  reportClock clks'
+   --    | length clks' >= 2
+   --    = Just
+   --    $ concat ["The following clocks:\n"
+   --             ,concatMap (\c -> "* " ++ showPpr (snd c) ++ "\n") clks'
+   --             ,"belong to the same clock domain and should be connected to "
+   --             ,"the same clock source in order to prevent meta-stability "
+   --             ,"issues."
+   --             ]
+   --    | otherwise
+   --    = Nothing
 
-    reportResets rsts'
-      | length rsts' >= 2
-      , any (\((_,sync),_) -> sync == Asynchronous) rsts'
-      = Just
-      $ concat ["The following resets:\n"
-               ,concatMap (\c -> "* " ++ showPpr (snd c) ++ "\n") rsts'
-               ,"belong to the same reset domain, and one or more of these "
-               ,"resets is Asynchronous. Ensure that these resets are "
-               ,"synchronized in order to prevent meta-stability issues."
-               ]
-    reportResets _ = Nothing
+   --  reportResets rsts'
+   --    | length rsts' >= 2
+   --    , any (\((_,sync),_) -> sync == Asynchronous) rsts'
+   --    = Just
+   --    $ concat ["The following resets:\n"
+   --             ,concatMap (\c -> "* " ++ showPpr (snd c) ++ "\n") rsts'
+   --             ,"belong to the same reset domain, and one or more of these "
+   --             ,"resets is Asynchronous. Ensure that these resets are "
+   --             ,"synchronized in order to prevent meta-stability issues."
+   --             ]
+   --  reportResets _ = Nothing
