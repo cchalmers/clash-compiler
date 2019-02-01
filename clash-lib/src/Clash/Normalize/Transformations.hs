@@ -1195,6 +1195,11 @@ makeANF (TransformContext is0 ctx) (Lam bndr e) = do
 
 makeANF _ e@(TyLam {}) = return e
 
+makeANF (TransformContext is0 ctx) (Case subj altType [(dp@(DataPat dc exs bndrs),e)])
+  | nameOcc (dcName dc) == "Clash.Signal.Internal.:-" = do
+    e' <- makeANF (TransformContext (extendInScopeSetList (extendInScopeSetList is0 bndrs) exs) ctx) e
+    return (Case subj altType [(dp,e')])
+
 makeANF ctx@(TransformContext is0 _) e0
   = do
     is1 <- unionInScope is0 <$> Lens.use globalInScope
